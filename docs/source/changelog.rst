@@ -8,6 +8,16 @@ Upcoming version (not yet released)
 Added
 ^^^^^
 
+- Added seven per-sub-terrain velocity task configs for the Unitree G1
+  (``Mjlab-Velocity-Flat-Terrain-Unitree-G1``,
+  ``Mjlab-Velocity-PyramidStairs-Unitree-G1``,
+  ``Mjlab-Velocity-PyramidStairsInv-Unitree-G1``,
+  ``Mjlab-Velocity-HfPyramidSlope-Unitree-G1``,
+  ``Mjlab-Velocity-HfPyramidSlopeInv-Unitree-G1``,
+  ``Mjlab-Velocity-RandomRough-Unitree-G1``,
+  ``Mjlab-Velocity-WaveTerrain-Unitree-G1``) so each sub-terrain from
+  ``ROUGH_TERRAINS_CFG`` can be trained or evaluated in isolation while
+  keeping the rough curriculum schedule.
 - Added ``ContactSensor.primary_names`` property to expose the resolved
   primary names in the order they appear along the per-contact axis of the
   output tensors. This makes it possible to map a contact-data column back

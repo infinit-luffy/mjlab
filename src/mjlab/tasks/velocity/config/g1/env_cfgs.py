@@ -1,5 +1,7 @@
 """Unitree G1 velocity environment configurations."""
 
+from dataclasses import replace
+
 from mjlab.asset_zoo.robots import (
   G1_ACTION_SCALE,
   get_g1_robot_cfg,
@@ -20,6 +22,7 @@ from mjlab.sensor import (
 from mjlab.tasks.velocity import mdp
 from mjlab.tasks.velocity.mdp import UniformVelocityCommandCfg
 from mjlab.tasks.velocity.velocity_env_cfg import make_velocity_env_cfg
+from mjlab.terrains.config import ROUGH_TERRAINS_CFG
 
 
 def unitree_g1_rough_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
@@ -218,3 +221,76 @@ def unitree_g1_flat_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
     twist_cmd.ranges.ang_vel_z = (-0.7, 0.7)
 
   return cfg
+
+
+def unitree_g1_single_terrain_env_cfg(
+  sub_terrain_name: str, play: bool = False
+) -> ManagerBasedRlEnvCfg:
+  """Create a G1 velocity config restricted to a single ROUGH sub-terrain.
+
+  Starts from ``unitree_g1_rough_env_cfg`` and replaces the terrain generator's
+  ``sub_terrains`` dict with a single entry copied from ``ROUGH_TERRAINS_CFG``
+  (so the step-height/slope ranges match rough), with ``proportion=1.0``.
+
+  Under ``curriculum=True`` the generator uses ``len(sub_terrains)=1`` columns
+  and ``num_rows`` difficulty levels, so the agent still climbs a difficulty
+  curriculum on that single terrain type.
+  """
+  if sub_terrain_name not in ROUGH_TERRAINS_CFG.sub_terrains:
+    raise KeyError(
+      f"Unknown sub-terrain {sub_terrain_name!r}; "
+      f"expected one of {sorted(ROUGH_TERRAINS_CFG.sub_terrains)}"
+    )
+
+  cfg = unitree_g1_rough_env_cfg(play=play)
+
+  assert cfg.scene.terrain is not None
+  assert cfg.scene.terrain.terrain_generator is not None
+
+  source = ROUGH_TERRAINS_CFG.sub_terrains[sub_terrain_name]
+  cfg.scene.terrain.terrain_generator.sub_terrains = {
+    sub_terrain_name: replace(source, proportion=1.0),
+  }
+
+  return cfg
+
+
+def unitree_g1_flat_terrain_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+  """G1 velocity config on the ROUGH ``flat`` sub-terrain only."""
+  return unitree_g1_single_terrain_env_cfg("flat", play=play)
+
+
+def unitree_g1_pyramid_stairs_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+  """G1 velocity config on pyramid stairs (stairs up) only."""
+  return unitree_g1_single_terrain_env_cfg("pyramid_stairs", play=play)
+
+
+def unitree_g1_pyramid_stairs_inv_env_cfg(
+  play: bool = False,
+) -> ManagerBasedRlEnvCfg:
+  """G1 velocity config on inverted pyramid stairs (stairs down) only."""
+  return unitree_g1_single_terrain_env_cfg("pyramid_stairs_inv", play=play)
+
+
+def unitree_g1_hf_pyramid_slope_env_cfg(
+  play: bool = False,
+) -> ManagerBasedRlEnvCfg:
+  """G1 velocity config on heightfield pyramid slope (slope up) only."""
+  return unitree_g1_single_terrain_env_cfg("hf_pyramid_slope", play=play)
+
+
+def unitree_g1_hf_pyramid_slope_inv_env_cfg(
+  play: bool = False,
+) -> ManagerBasedRlEnvCfg:
+  """G1 velocity config on inverted heightfield pyramid slope (slope down)."""
+  return unitree_g1_single_terrain_env_cfg("hf_pyramid_slope_inv", play=play)
+
+
+def unitree_g1_random_rough_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+  """G1 velocity config on Perlin random rough heightfield only."""
+  return unitree_g1_single_terrain_env_cfg("random_rough", play=play)
+
+
+def unitree_g1_wave_terrain_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+  """G1 velocity config on sinusoidal wave terrain only."""
+  return unitree_g1_single_terrain_env_cfg("wave_terrain", play=play)
